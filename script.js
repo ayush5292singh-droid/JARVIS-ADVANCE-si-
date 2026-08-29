@@ -1,12 +1,13 @@
 /* =========================================================
-   JARVIS V5
-   VOICE → RECOGNIZE → EXECUTE → SPEAK
+   JARVIS COMMAND SYSTEM
+   VOICE → COMMAND → ACTION
+   AUTO EXECUTION VERSION
 ========================================================= */
 
 
-/* =========================
+/* =========================================================
    ELEMENTS
-========================= */
+========================================================= */
 
 const $ = id => document.getElementById(id);
 
@@ -47,18 +48,18 @@ const commandCount = $("commandCount");
 const commandState = $("commandState");
 
 const stateText = $("stateText");
-const connectionText = $("connectionText");
 
 
-/* =========================
+/* =========================================================
    STATE
-========================= */
+========================================================= */
 
 let recognition = null;
 
 let listening = false;
 let speaking = false;
 let processing = false;
+
 let wakeMode = false;
 
 let commandTotal = 0;
@@ -72,9 +73,9 @@ let lastCommand = "";
 let lastCommandTime = 0;
 
 
-/* =========================
+/* =========================================================
    SPEECH RECOGNITION
-========================= */
+========================================================= */
 
 const SpeechRecognition =
     window.SpeechRecognition ||
@@ -83,33 +84,36 @@ const SpeechRecognition =
 
 if (SpeechRecognition) {
 
-    recognition =
-        new SpeechRecognition();
+    recognition = new SpeechRecognition();
 
-    recognition.lang =
-        "en-IN";
+    recognition.lang = "en-IN";
 
-    recognition.continuous =
-        true;
+    /*
+       continuous = true means JARVIS
+       can keep listening.
+    */
+    recognition.continuous = true;
 
-    recognition.interimResults =
-        true;
+    /*
+       interim results make the transcript
+       update while you are speaking.
+    */
+    recognition.interimResults = true;
 
-    recognition.maxAlternatives =
-        1;
+    recognition.maxAlternatives = 1;
 
+
+    /* -----------------------------------------
+       START
+    ----------------------------------------- */
 
     recognition.onstart = () => {
 
         listening = true;
 
-        document.body.classList.add(
-            "listening"
-        );
+        document.body.classList.add("listening");
 
-        recordingIndicator.classList.add(
-            "active"
-        );
+        recordingIndicator.classList.add("active");
 
         recordingIndicator.innerHTML =
             "<i></i><span>MIC ACTIVE</span>";
@@ -144,6 +148,10 @@ if (SpeechRecognition) {
         setPipeline("listen");
     };
 
+
+    /* -----------------------------------------
+       SPEECH RESULT
+    ----------------------------------------- */
 
     recognition.onresult = event => {
 
@@ -203,11 +211,13 @@ if (SpeechRecognition) {
 
 
         /*
-         * IMPORTANT:
-         *
-         * As soon as speech becomes FINAL,
-         * execute it automatically.
-         */
+           THIS IS THE IMPORTANT PART.
+
+           Once speech becomes FINAL,
+           JARVIS automatically executes it.
+
+           You DON'T need to press EXECUTE.
+        */
 
         if (finalText.trim()) {
 
@@ -220,19 +230,21 @@ if (SpeechRecognition) {
     };
 
 
+    /* -----------------------------------------
+       ERROR
+    ----------------------------------------- */
+
     recognition.onerror = event => {
 
         console.log(
-            "Speech error:",
+            "Voice error:",
             event.error
         );
 
 
         if (
-            event.error ===
-                "not-allowed" ||
-            event.error ===
-                "service-not-allowed"
+            event.error === "not-allowed" ||
+            event.error === "service-not-allowed"
         ) {
 
             wakeMode = false;
@@ -254,6 +266,10 @@ if (SpeechRecognition) {
     };
 
 
+    /* -----------------------------------------
+       END
+    ----------------------------------------- */
+
     recognition.onend = () => {
 
         listening = false;
@@ -262,21 +278,20 @@ if (SpeechRecognition) {
 
 
         /*
-         * Wake mode keeps the microphone
-         * ready for the next command.
-         */
+           In wake mode, restart microphone
+           automatically.
+        */
 
         if (
             wakeMode &&
-            !processing
+            !processing &&
+            !speaking
         ) {
 
             setTimeout(
                 () => {
 
-                    try {
-                        recognition.start();
-                    } catch(e) {}
+                    startListening();
 
                 },
                 400
@@ -286,7 +301,7 @@ if (SpeechRecognition) {
         }
 
 
-        if (!processing) {
+        if (!processing && !speaking) {
 
             resetVoiceUI();
 
@@ -303,14 +318,14 @@ if (SpeechRecognition) {
         "UNAVAILABLE";
 
     transcript.textContent =
-        "This browser does not support voice recognition.";
+        "Voice recognition is not supported by this browser.";
 
 }
 
 
-/* =========================
-   SPEAK BUTTON
-========================= */
+/* =========================================================
+   MAIN SPEAK BUTTON
+========================================================= */
 
 speakButton.addEventListener(
     "click",
@@ -344,9 +359,9 @@ speakButton.addEventListener(
 );
 
 
-/* =========================
+/* =========================================================
    WAKE MODE
-========================= */
+========================================================= */
 
 wakeToggle.addEventListener(
     "click",
@@ -369,7 +384,6 @@ wakeToggle.addEventListener(
                 'WAKE MODE ENABLED — SAY "JARVIS"'
             );
 
-
             voiceHint.textContent =
                 'Say "Jarvis" followed by a command.';
 
@@ -388,11 +402,7 @@ wakeToggle.addEventListener(
             );
 
 
-            if (listening) {
-
-                stopListening();
-
-            }
+            stopListening();
 
         }
 
@@ -400,9 +410,9 @@ wakeToggle.addEventListener(
 );
 
 
-/* =========================
+/* =========================================================
    START LISTENING
-========================= */
+========================================================= */
 
 function startListening() {
 
@@ -413,10 +423,10 @@ function startListening() {
 
         recognition.start();
 
-    } catch(e) {
+    } catch (error) {
 
         console.log(
-            "Recognition already active."
+            "Recognition already running."
         );
 
     }
@@ -424,9 +434,9 @@ function startListening() {
 }
 
 
-/* =========================
+/* =========================================================
    STOP LISTENING
-========================= */
+========================================================= */
 
 function stopListening() {
 
@@ -441,7 +451,7 @@ function stopListening() {
 
         recognition.stop();
 
-    } catch(e) {}
+    } catch (error) {}
 
 
     listening = false;
@@ -453,13 +463,11 @@ function stopListening() {
 }
 
 
-/* =========================
-   VOICE COMMAND
-========================= */
+/* =========================================================
+   PROCESS VOICE COMMAND
+========================================================= */
 
-function processVoiceCommand(
-    text
-) {
+function processVoiceCommand(text) {
 
     const command =
         text
@@ -471,8 +479,8 @@ function processVoiceCommand(
 
 
     /*
-     * Prevent duplicate recognition.
-     */
+       Prevent duplicate commands.
+    */
 
     const now =
         Date.now();
@@ -506,9 +514,9 @@ function processVoiceCommand(
         command;
 
 
-    /*
-     * Wake phrase
-     */
+    /* -----------------------------------------
+       JARVIS WAKE PHRASE
+    ----------------------------------------- */
 
     const wake =
         command.match(
@@ -527,6 +535,11 @@ function processVoiceCommand(
                 .trim();
 
 
+        /*
+           User only said:
+           "Jarvis"
+        */
+
         if (!remaining) {
 
             wakeMode = true;
@@ -540,23 +553,28 @@ function processVoiceCommand(
                 "Yes. I'm listening."
             );
 
-
             return;
 
         }
 
+
+        /*
+           User said:
+           "Jarvis open YouTube"
+        */
 
         executeCommand(
             remaining
         );
 
         return;
+
     }
 
 
     /*
-     * Normal speech
-     */
+       Normal speech.
+    */
 
     if (!wakeMode) {
 
@@ -569,13 +587,11 @@ function processVoiceCommand(
 }
 
 
-/* =========================
+/* =========================================================
    COMMAND ENGINE
-========================= */
+========================================================= */
 
-function executeCommand(
-    command
-) {
+function executeCommand(command) {
 
     if (
         !command ||
@@ -621,9 +637,9 @@ function executeCommand(
         command.toLowerCase();
 
 
-    /* =========================
+    /* =====================================================
        STOP SPEAKING
-    ========================= */
+    ===================================================== */
 
     if (
         lower.includes("stop speaking") ||
@@ -643,9 +659,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        TIME
-    ========================= */
+    ===================================================== */
 
     if (
         lower.includes("what time") ||
@@ -673,9 +689,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        DATE
-    ========================= */
+    ===================================================== */
 
     if (
         lower.includes("what date") ||
@@ -706,9 +722,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        OPEN GOOGLE
-    ========================= */
+    ===================================================== */
 
     if (
         lower === "open google" ||
@@ -725,9 +741,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        OPEN YOUTUBE
-    ========================= */
+    ===================================================== */
 
     if (
         lower === "open youtube" ||
@@ -744,12 +760,13 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        OPEN GITHUB
-    ========================= */
+    ===================================================== */
 
     if (
-        lower === "open github"
+        lower === "open github" ||
+        lower === "go to github"
     ) {
 
         openWebsite(
@@ -762,12 +779,13 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        OPEN WIKIPEDIA
-    ========================= */
+    ===================================================== */
 
     if (
-        lower === "open wikipedia"
+        lower === "open wikipedia" ||
+        lower === "go to wikipedia"
     ) {
 
         openWebsite(
@@ -780,9 +798,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        GOOGLE SEARCH
-    ========================= */
+    ===================================================== */
 
     if (
         lower.startsWith(
@@ -815,9 +833,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        YOUTUBE SEARCH
-    ========================= */
+    ===================================================== */
 
     if (
         lower.startsWith(
@@ -850,9 +868,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        GENERIC SEARCH
-    ========================= */
+    ===================================================== */
 
     if (
         lower.startsWith("search ") ||
@@ -891,9 +909,9 @@ function executeCommand(
     }
 
 
-    /* =========================
-       OPEN ANY WEBSITE
-    ========================= */
+    /* =====================================================
+       OPEN WEBSITE
+    ===================================================== */
 
     if (
         lower.startsWith("open ") ||
@@ -922,9 +940,9 @@ function executeCommand(
     }
 
 
-    /* =========================
+    /* =====================================================
        GREETING
-    ========================= */
+    ===================================================== */
 
     if (
         lower === "hello" ||
@@ -941,11 +959,10 @@ function executeCommand(
     }
 
 
-    /* =========================
-       UNKNOWN
-       
-       Search automatically.
-    ========================= */
+    /* =====================================================
+       UNKNOWN COMMAND
+       Search it automatically.
+    ===================================================== */
 
     googleSearch(
         command
@@ -954,13 +971,11 @@ function executeCommand(
 }
 
 
-/* =========================
-   WEBSITE ENGINE
-========================= */
+/* =========================================================
+   OPEN ANY WEBSITE
+========================================================= */
 
-function openAnyWebsite(
-    site
-) {
+function openAnyWebsite(site) {
 
     site =
         site
@@ -1015,10 +1030,7 @@ function openAnyWebsite(
     const key =
         site
             .toLowerCase()
-            .replace(
-                /\s+/g,
-                ""
-            );
+            .replace(/\s+/g, "");
 
 
     if (
@@ -1039,6 +1051,11 @@ function openAnyWebsite(
         site;
 
 
+    /*
+       If user says:
+       "google.com"
+    */
+
     if (
         !url.startsWith("https://") &&
         !url.startsWith("http://")
@@ -1049,6 +1066,11 @@ function openAnyWebsite(
 
     }
 
+
+    /*
+       If it looks like a real domain,
+       automatically open it.
+    */
 
     if (
         isWebsite(url)
@@ -1061,6 +1083,11 @@ function openAnyWebsite(
 
     } else {
 
+        /*
+           If it isn't a website,
+           search it instead.
+        */
+
         googleSearch(
             site
         );
@@ -1070,18 +1097,40 @@ function openAnyWebsite(
 }
 
 
-/* =========================
-   OPEN WEBSITE
-========================= */
+/* =========================================================
+   WEBSITE VALIDATION
+========================================================= */
 
-function openWebsite(
-    url,
-    response
-) {
+function isWebsite(url) {
 
-    setPipeline(
-        "execute"
-    );
+    try {
+
+        const parsed =
+            new URL(url);
+
+
+        return (
+            parsed.hostname.includes(".") ||
+            parsed.hostname === "localhost"
+        );
+
+    } catch (error) {
+
+        return false;
+
+    }
+
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   AUTOMATIC WEBSITE NAVIGATION
+========================================================= */
+
+function openWebsite(url, response) {
+
+    setPipeline("execute");
 
 
     addLog(
@@ -1094,48 +1143,42 @@ function openWebsite(
         response;
 
 
+    /*
+       JARVIS speaks before navigating.
+    */
+
     jarvisSpeak(
         response
     );
 
 
-    const tab =
-        window.open(
-            url,
-            "_blank"
-        );
-
-
     /*
-     * Browser popup blocker fallback.
-     */
+       Automatically navigate the CURRENT TAB.
 
-    if (
-        !tab ||
-        tab.closed ||
-        typeof tab.closed ===
-            "undefined"
-    ) {
+       This avoids popup blocking.
 
-        showOpenLink(
-            url
-        );
+       No "OPEN PAGE" button.
+       No second click.
+    */
 
-    }
+    setTimeout(
+        () => {
 
+            window.location.href =
+                url;
 
-    finishVisualState();
+        },
+        500
+    );
 
 }
 
 
-/* =========================
-   GOOGLE
-========================= */
+/* =========================================================
+   GOOGLE SEARCH
+========================================================= */
 
-function googleSearch(
-    query
-) {
+function googleSearch(query) {
 
     if (!query) {
 
@@ -1148,9 +1191,7 @@ function googleSearch(
     }
 
 
-    setPipeline(
-        "execute"
-    );
+    setPipeline("execute");
 
 
     const url =
@@ -1179,39 +1220,28 @@ function googleSearch(
     );
 
 
-    const tab =
-        window.open(
-            url,
-            "_blank"
-        );
+    /*
+       Automatically navigate.
+    */
 
+    setTimeout(
+        () => {
 
-    if (
-        !tab ||
-        tab.closed ||
-        typeof tab.closed ===
-            "undefined"
-    ) {
+            window.location.href =
+                url;
 
-        showOpenLink(
-            url
-        );
-
-    }
-
-
-    finishVisualState();
+        },
+        500
+    );
 
 }
 
 
-/* =========================
-   YOUTUBE
-========================= */
+/* =========================================================
+   YOUTUBE SEARCH
+========================================================= */
 
-function youtubeSearch(
-    query
-) {
+function youtubeSearch(query) {
 
     if (!query) {
 
@@ -1224,9 +1254,7 @@ function youtubeSearch(
     }
 
 
-    setPipeline(
-        "execute"
-    );
+    setPipeline("execute");
 
 
     const url =
@@ -1255,68 +1283,24 @@ function youtubeSearch(
     );
 
 
-    const tab =
-        window.open(
-            url,
-            "_blank"
-        );
+    setTimeout(
+        () => {
 
+            window.location.href =
+                url;
 
-    if (
-        !tab ||
-        tab.closed ||
-        typeof tab.closed ===
-            "undefined"
-    ) {
-
-        showOpenLink(
-            url
-        );
-
-    }
-
-
-    finishVisualState();
+        },
+        500
+    );
 
 }
 
 
-/* =========================
-   WEBSITE VALIDATION
-========================= */
+/* =========================================================
+   JARVIS VOICE
+========================================================= */
 
-function isWebsite(
-    url
-) {
-
-    try {
-
-        const parsed =
-            new URL(url);
-
-
-        return (
-            parsed.hostname.includes(".") ||
-            parsed.hostname ===
-                "localhost"
-        );
-
-    } catch(e) {
-
-        return false;
-
-    }
-
-}
-
-
-/* =========================
-   JARVIS SPEECH
-========================= */
-
-function jarvisSpeak(
-    text
-) {
+function jarvisSpeak(text) {
 
     if (
         !("speechSynthesis" in window)
@@ -1341,11 +1325,19 @@ function jarvisSpeak(
     utterance.lang =
         "en-IN";
 
+
+    /*
+       Slightly slower gives a more
+       assistant-like voice.
+    */
+
     utterance.rate =
-        0.92;
+        0.90;
+
 
     utterance.pitch =
         0.78;
+
 
     utterance.volume =
         1;
@@ -1416,6 +1408,10 @@ function jarvisSpeak(
             );
 
 
+            /*
+               Wake mode returns to listening.
+            */
+
             if (
                 wakeMode &&
                 !listening
@@ -1458,9 +1454,9 @@ function jarvisSpeak(
 }
 
 
-/* =========================
+/* =========================================================
    STOP SPEECH
-========================= */
+========================================================= */
 
 function speechStop() {
 
@@ -1475,9 +1471,9 @@ function speechStop() {
 }
 
 
-/* =========================
+/* =========================================================
    FINISH
-========================= */
+========================================================= */
 
 function finish(
     message,
@@ -1514,9 +1510,9 @@ function finish(
 }
 
 
-/* =========================
+/* =========================================================
    FINISH VISUAL STATE
-========================= */
+========================================================= */
 
 function finishVisualState() {
 
@@ -1536,9 +1532,9 @@ function finishVisualState() {
 }
 
 
-/* =========================
-   RESET UI
-========================= */
+/* =========================================================
+   RESET VOICE UI
+========================================================= */
 
 function resetVoiceUI() {
 
@@ -1591,16 +1587,14 @@ function resetVoiceUI() {
             : "Tap the core and speak a command.";
 
 
-    setPipeline(
-        "wake"
-    );
+    setPipeline("wake");
 
 }
 
 
-/* =========================
+/* =========================================================
    LISTEN TIMER
-========================= */
+========================================================= */
 
 function startListenTimer() {
 
@@ -1630,7 +1624,7 @@ function startListenTimer() {
 
 
                 listenTimer.textContent =
-                    `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+                    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
 
                 animateVoice();
@@ -1655,20 +1649,15 @@ function stopListenTimer() {
 }
 
 
-/* =========================
-   VOICE VISUALIZER
-========================= */
+/* =========================================================
+   VOICE ANIMATION
+========================================================= */
 
 function animateVoice() {
 
     const value =
         35 +
         Math.random() * 65;
-
-
-    voiceMeterSafe(
-        value
-    );
 
 
     voicePercent.textContent =
@@ -1695,22 +1684,11 @@ function animateVoice() {
 }
 
 
-function voiceMeterSafe(
-    value
-) {
-
-    if (!voiceBar) return;
-
-}
-
-
-/* =========================
+/* =========================================================
    PIPELINE
-========================= */
+========================================================= */
 
-function setPipeline(
-    active
-) {
+function setPipeline(active) {
 
     const steps = {
 
@@ -1760,9 +1738,9 @@ function setPipeline(
 }
 
 
-/* =========================
+/* =========================================================
    MANUAL COMMAND
-========================= */
+========================================================= */
 
 sendButton.addEventListener(
     "click",
@@ -1775,8 +1753,7 @@ commandInput.addEventListener(
     event => {
 
         if (
-            event.key ===
-                "Enter"
+            event.key === "Enter"
         ) {
 
             sendManualCommand();
@@ -1817,9 +1794,9 @@ function sendManualCommand() {
 }
 
 
-/* =========================
-   QUICK COMMANDS
-========================= */
+/* =========================================================
+   QUICK COMMAND BUTTONS
+========================================================= */
 
 document
     .querySelectorAll(
@@ -1857,9 +1834,9 @@ document
     );
 
 
-/* =========================
-   STOP LISTENING
-========================= */
+/* =========================================================
+   STOP LISTENING BUTTON
+========================================================= */
 
 stopVoice.addEventListener(
     "click",
@@ -1877,9 +1854,9 @@ stopVoice.addEventListener(
 );
 
 
-/* =========================
-   STOP SPEAKING
-========================= */
+/* =========================================================
+   STOP SPEAKING BUTTON
+========================================================= */
 
 stopSpeaking.addEventListener(
     "click",
@@ -1905,9 +1882,9 @@ stopSpeaking.addEventListener(
 );
 
 
-/* =========================
-   CLEAR LOG
-========================= */
+/* =========================================================
+   CLEAR COMMAND LOG
+========================================================= */
 
 clearLog.addEventListener(
     "click",
@@ -1926,9 +1903,9 @@ clearLog.addEventListener(
 );
 
 
-/* =========================
+/* =========================================================
    CLOCK
-========================= */
+========================================================= */
 
 function updateClock() {
 
@@ -1948,9 +1925,9 @@ setInterval(
 );
 
 
-/* =========================
-   SESSION
-========================= */
+/* =========================================================
+   SESSION TIMER
+========================================================= */
 
 setInterval(
     () => {
@@ -1958,24 +1935,24 @@ setInterval(
         sessionSeconds++;
 
 
-        const h =
+        const hours =
             Math.floor(
                 sessionSeconds / 3600
             );
 
 
-        const m =
+        const minutes =
             Math.floor(
                 (sessionSeconds % 3600) / 60
             );
 
 
-        const s =
+        const seconds =
             sessionSeconds % 60;
 
 
         sessionTime.textContent =
-            `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+            `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
 
         sessionBar.style.width =
@@ -1990,9 +1967,9 @@ setInterval(
 );
 
 
-/* =========================
+/* =========================================================
    CORE TELEMETRY
-========================= */
+========================================================= */
 
 setInterval(
     () => {
@@ -2016,14 +1993,17 @@ setInterval(
 );
 
 
-/* =========================
+/* =========================================================
    LOGGING
-========================= */
+========================================================= */
 
 function addLog(
     type,
     message
 ) {
+
+    if (!activityLog) return;
+
 
     const item =
         document.createElement(
@@ -2076,10 +2056,34 @@ function addLog(
             );
 
 
-    item.innerHTML = `
-        <time>${escapeHTML(time)}</time>
-        <span>${escapeHTML(message)}</span>
-    `;
+    const timeElement =
+        document.createElement(
+            "time"
+        );
+
+
+    timeElement.textContent =
+        time;
+
+
+    const messageElement =
+        document.createElement(
+            "span"
+        );
+
+
+    messageElement.textContent =
+        message;
+
+
+    item.appendChild(
+        timeElement
+    );
+
+
+    item.appendChild(
+        messageElement
+    );
 
 
     activityLog.prepend(
@@ -2089,69 +2093,9 @@ function addLog(
 }
 
 
-/* =========================
-   HTML ESCAPE
-========================= */
-
-function escapeHTML(
-    value
-) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        String(value);
-
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================
-   POPUP FALLBACK
-========================= */
-
-function showOpenLink(
-    url
-) {
-
-    transcript.innerHTML = `
-        Browser blocked automatic opening.
-        <br><br>
-
-        <a
-            href="${escapeHTML(url)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="
-                color:#65fff1;
-                text-decoration:none;
-                border:1px solid rgba(101,255,241,.4);
-                padding:8px 12px;
-                display:inline-block;
-            "
-        >
-            OPEN PAGE
-        </a>
-    `;
-
-
-    addLog(
-        "SYSTEM",
-        "Popup blocked — OPEN PAGE available."
-    );
-
-}
-
-
-/* =========================
-   INITIAL SYSTEM
-========================= */
+/* =========================================================
+   INITIALIZATION
+========================================================= */
 
 addLog(
     "SYSTEM",
@@ -2165,7 +2109,7 @@ addLog(
 
 addLog(
     "SYSTEM",
-    "WEB NAVIGATION ENGINE READY"
+    "AUTOMATIC WEB NAVIGATION READY"
 );
 
 addLog(
@@ -2179,9 +2123,9 @@ addLog(
 );
 
 
-/* =========================
-   LOAD VOICES
-========================= */
+/* =========================================================
+   LOAD AVAILABLE VOICES
+========================================================= */
 
 if (
     "speechSynthesis" in window
