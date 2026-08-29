@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>JARVIS // AI COMMAND CENTER</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="background-grid"></div>
+<div class="scanline"></div>
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="brand-orb"></div>
+
+        <div>
+            <h1>JARVIS</h1>
+            <span>PERSONAL COMMAND SYSTEM</span>
+        </div>
+    </div>
+
+    <div class="system-info">
+        <div>
+            <small>SYSTEM</small>
+            <strong>ONLINE</strong>
+        </div>
+
+        <div>
+            <small>TIME</small>
+            <strong id="clock">--:--:--</strong>
+        </div>
+    </div>
+
+</header>
+
+
+<main class="dashboard">
+
+    <!-- LEFT PANEL -->
+
+    <aside class="panel left-panel">
+
+        <div class="panel-title">
+            <span>COMMAND STREAM</span>
+            <button id="clearLog">CLEAR</button>
+        </div>
+
+        <div id="activityLog" class="activity-log"></div>
+
+    </aside>
+
+
+    <!-- CENTER -->
+
+    <section class="core-section">
+
+        <div class="status-line">
+
+            <span class="status-dot"></span>
+
+            <span id="stateText">
+                SYSTEM STANDBY
+            </span>
+
+        </div>
+
+
+        <div class="core-container">
+
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="orbit orbit-three"></div>
+
+            <div class="core-glow"></div>
+
+            <button id="speakButton" class="jarvis-core">
+
+                <div class="core-inner">
+
+                    <div class="core-logo">
+                        J
+                    </div>
+
+                    <div class="core-label">
+                        <span id="speakLabel">
+                            SPEAK
+                        </span>
+                    </div>
+
+                </div>
+
+            </button>
+
+        </div>
+
+
+        <div class="voice-area">
+
+            <div class="voice-status">
+
+                <span id="recordingIndicator">
+                    <i></i>
+                    <span>MIC OFF</span>
+                </span>
+
+                <strong id="voiceStatus">
+                    READY
+                </strong>
+
+            </div>
+
+
+            <div class="waveform" id="waveform">
+
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+                <i></i>
+
+            </div>
+
+
+            <p id="voiceHint">
+                Tap the core and speak a command.
+            </p>
+
+            <div class="listen-time">
+                <span>LISTEN TIME</span>
+                <strong id="listenTimer">00:00</strong>
+            </div>
+
+        </div>
+
+
+        <!-- TRANSCRIPT -->
+
+        <div class="transcript-card">
+
+            <div class="transcript-header">
+
+                <span>
+                    LIVE TRANSCRIPT
+                </span>
+
+                <span id="transcriptState">
+                    WAITING
+                </span>
+
+            </div>
+
+            <div id="transcript">
+                Voice command will appear here...
+            </div>
+
+        </div>
+
+
+        <!-- MANUAL COMMAND -->
+
+        <div class="command-box">
+
+            <input
+                id="commandInput"
+                type="text"
+                autocomplete="off"
+                placeholder="Type a command manually..."
+            >
+
+            <button id="sendButton">
+                EXECUTE
+            </button>
+
+        </div>
+
+
+        <div class="voice-buttons">
+
+            <button id="stopVoice">
+                STOP LISTENING
+            </button>
+
+            <button id="stopSpeaking">
+                STOP SPEAKING
+            </button>
+
+            <button id="wakeToggle">
+                WAKE MODE
+            </button>
+
+        </div>
+
+
+        <!-- QUICK COMMANDS -->
+
+        <div class="quick-commands">
+
+            <button data-command="open google">
+                GOOGLE
+            </button>
+
+            <button data-command="open youtube">
+                YOUTUBE
+            </button>
+
+            <button data-command="search Google for football">
+                SEARCH
+            </button>
+
+            <button data-command="what time is it">
+                TIME
+            </button>
+
+            <button data-command="what is today's date">
+                DATE
+            </button>
+
+            <button data-command="open github">
+                GITHUB
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- RIGHT PANEL -->
+
+    <aside class="panel right-panel">
+
+        <div class="panel-title">
+            <span>SYSTEM TELEMETRY</span>
+        </div>
+
+
+        <div class="telemetry">
+
+            <div class="telemetry-card">
+
+                <div class="telemetry-head">
+                    <span>CORE</span>
+                    <strong id="corePercent">--%</strong>
+                </div>
+
+                <div class="progress">
+                    <div id="coreBar"></div>
+                </div>
+
+            </div>
+
+
+            <div class="telemetry-card">
+
+                <div class="telemetry-head">
+                    <span>VOICE</span>
+                    <strong id="voicePercent">--%</strong>
+                </div>
+
+                <div class="progress">
+                    <div id="voiceBar"></div>
+                </div>
+
+            </div>
+
+
+            <div class="telemetry-card">
+
+                <div class="telemetry-head">
+                    <span>SESSION</span>
+                    <strong id="sessionTime">
+                        00:00:00
+                    </strong>
+                </div>
+
+                <div class="progress">
+                    <div id="sessionBar"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="status-grid">
+
+            <div>
+                <small>VOICE ENGINE</small>
+                <strong id="voiceEngine">
+                    READY
+                </strong>
+            </div>
+
+            <div>
+                <small>COMMANDS</small>
+                <strong id="commandCount">
+                    0 COMMANDS
+                </strong>
+            </div>
+
+            <div>
+                <small>NETWORK</small>
+                <strong id="connectionText">
+                    ONLINE
+                </strong>
+            </div>
+
+            <div>
+                <small>EXECUTION</small>
+                <strong id="commandState">
+                    STANDBY
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="pipeline">
+
+            <div id="stepWake">
+                <span>01</span>
+                <strong>WAKE</strong>
+            </div>
+
+            <div id="stepListen">
+                <span>02</span>
+                <strong>LISTEN</strong>
+            </div>
+
+            <div id="stepThink">
+                <span>03</span>
+                <strong>THINK</strong>
+            </div>
+
+            <div id="stepExecute">
+                <span>04</span>
+                <strong>EXECUTE</strong>
+            </div>
+
+        </div>
+
+    </aside>
+
+</main>
+
+
+<footer>
+
+    <span>
+        JARVIS COMMAND INTERFACE
+    </span>
+
+    <span>
+        VOICE → COMMAND → ACTION
+    </span>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
